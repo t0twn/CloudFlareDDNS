@@ -23,14 +23,28 @@ function setEnv(){
   source $EnvFile
 }
 
+function preCheck(){
+  if [ $USE_DNS_SERVER = 'true' ];then
+    ping -w 5 $DNS_SERVER
+    if [ $? != 0 ];then
+      echo "PreCheck failed that DNS Server $DNS_SERVER is not reachable."
+      exit 1
+    fi
+  fi
+}
+
 function getIp(){
   IP=`curl -s ipinfo.io | grep -w ip | awk '{print $2}' | awk -F\" '{print $2}'`
 }
 
 function getDnsIp(){
-  DNS_IP=`curl -s --request GET \
-  --url https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/dns_records/${DNS_RECORD_ID} \
-  --header "Authorization: Bearer $TOKEN" | jq | grep -w content | awk '{print $2}' | awk -F\" '{print $2}'`
+  if [ $USE_DNS_SERVER = 'true' ];then
+    DNS_IP=`dig @${DNS_SERVER} ${NAME}.${CDN} +short`
+  else
+    DNS_IP=`curl -s --request GET \
+    --url https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/dns_records/${DNS_RECORD_ID} \
+    --header "Authorization: Bearer $TOKEN" | jq | grep -w content | awk '{print $2}' | awk -F\" '{print $2}'`
+  fi
 }
 
 function updateIp(){
@@ -49,6 +63,7 @@ function updateIp(){
 
 function main(){
   setEnv
+  preCheck
   getIp
   getDnsIp
   updateIp
