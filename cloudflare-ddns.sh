@@ -26,7 +26,9 @@ function getIp(){
 }
 
 function getDnsIp(){
-  DNS_IP=`dig @${DNS_SERVER} ${NAME}.${CDN} +short`
+  DNS_IP=`curl -s --request GET \
+  --url https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/dns_records/${DNS_RECORD_ID} \
+  --header "Authorization: Bearer $TOKEN" | jq | grep -w content | awk '{print $2}' | awk -F\" '{print $2}'`
 }
 
 function updateIp(){
