@@ -1,3 +1,5 @@
+#!/bin/bash
+
 IP=""
 NAME=""
 CDN=""
